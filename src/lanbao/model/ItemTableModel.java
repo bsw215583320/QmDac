@@ -21,7 +21,7 @@ public class ItemTableModel
   
   public int getColumnCount()
   {
-    return 5;
+    return 12;
   }
   
   public String getColumnName(int columnIndex)
@@ -40,6 +40,27 @@ public class ItemTableModel
     }
     if (columnIndex == 4) {
       return "烟蒂长度";
+    }
+    if (columnIndex == 5) {
+    	return "烟支数量";
+    }
+    if (columnIndex == 6) {
+    	return "未抽吸口数";
+    }
+    if (columnIndex == 7) {
+    	return "前称重";
+    }
+    if (columnIndex ==8 ) {
+    	return "后称重";
+    }
+    if (columnIndex ==9 ) {
+    	return "未燃烧支数";
+    }
+    if (columnIndex ==10 ) {
+    	return "一氧化碳";
+    }
+    if (columnIndex ==11 ) {
+    	return "口数值";
     }
     return null;
   }
@@ -71,6 +92,27 @@ public class ItemTableModel
     }
     if (columnIndex == 4) {
       return item.getButtlen();
+    }
+    if (columnIndex == 5) {
+    	return item.getCigarettecount();
+    }
+    if (columnIndex == 6) {
+    	return item.getNopuffcount();
+    }
+    if (columnIndex == 7) {
+    	return item.getBeforeweight();
+    }
+    if (columnIndex == 8) {
+    	return item.getAfterweight();
+    }
+    if (columnIndex == 9) {
+    	return item.getUnbrunedcigarettecount();
+    }
+    if (columnIndex == 10) {
+    	return item.getCovalue();
+    }
+    if (columnIndex == 11) {
+    	return item.getPuffvalues();
     }
     return null;
   }

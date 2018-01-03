@@ -36,10 +36,9 @@ public class JdbcUtil
     {
       Properties prop = new Properties();
       
-    //  String dir = System.getProperty("user.dir");
-    //  InputStream inStream = new FileInputStream(new File("/jdbc.properties"));
-      InputStream inStream = JdbcUtil.class  
-              .getResourceAsStream("/jdbc.properties");
+        String dir = System.getProperty("user.dir");
+        InputStream inStream = new FileInputStream(new File(dir+"/jdbc.properties"));
+     // InputStream inStream = JdbcUtil.class.getResourceAsStream("/jdbc.properties");
       prop.load(inStream);
       USERNAME = prop.getProperty("jdbc.username");
       PASSWORD = prop.getProperty("jdbc.password");

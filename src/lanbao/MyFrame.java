@@ -55,6 +55,7 @@ public class MyFrame
   private JTable table;
   private JScrollPane jScrollPane;
   private Map<String, String> batchMap=new HashMap<>();
+  private JTextField inter;
   
   public static void main(String[] args)
   {
@@ -145,14 +146,14 @@ public class MyFrame
       }
     });
     panel_2.add(this.chkBatch);
-    final NumberInputPnl nInputPnl = new NumberInputPnl();
+  /*  final NumberInputPnl nInputPnl = new NumberInputPnl();
     nInputPnl.setBounds(0, 180, 200, 100);
     this.panel.add(nInputPnl);
     nInputPnl.setVisible(false);
     final NumberInputPnl nInputPnl1 = new NumberInputPnl();
     nInputPnl1.setBounds(280, 180, 200, 100);
     this.panel.add(nInputPnl1);
-    nInputPnl1.setVisible(false);
+    nInputPnl1.setVisible(false);*/
     
     JLabel label_6 = new JLabel("\u6279\u6B21\u65E5\u671F");
     label_6.setBounds(25, 49, 55, 15);
@@ -168,11 +169,11 @@ public class MyFrame
     panel_1.setLayout(null);
     
     JLabel label_3 = new JLabel("平均重量");
-    label_3.setBounds(35, 26, 57, 15);
+    label_3.setBounds(21, 26, 57, 15);
     panel_1.add(label_3);
     
     this.wgt = new JTextField();
-    this.wgt.addFocusListener(new FocusAdapter()
+    /*this.wgt.addFocusListener(new FocusAdapter()
     {
       public void focusGained(FocusEvent e)
       {
@@ -183,10 +184,10 @@ public class MyFrame
       {
         MyFrame.this.removekey(nInputPnl);
       }
-    });
-    this.wgt.setBounds(101, 23, 73, 21);
+    });*/
+    this.wgt.setBounds(88, 23, 73, 21);
     this.wgt.setColumns(10);
-    this.wgt.addKeyListener(new KeyAdapter()
+   /* this.wgt.addKeyListener(new KeyAdapter()
     {
       public void keyTyped(KeyEvent e)
       {
@@ -199,11 +200,11 @@ public class MyFrame
         }
         e.consume();
       }
-    });
+    });*/
     panel_1.add(this.wgt);
     
     JLabel label_4 = new JLabel("g");
-    label_4.setBounds(184, 26, 12, 15);
+    label_4.setBounds(171, 26, 12, 15);
     panel_1.add(label_4);
     
     JButton button = new JButton("提交");
@@ -215,6 +216,7 @@ public class MyFrame
         String batchValue = "";
         String chkValue = "";
         String chker = "";
+        Double interval = Double.valueOf(0D);
         Double wgtVal = Double.valueOf(0.0D);
         Double pdoVal = Double.valueOf(0.0D);
         if (MyFrame.this.batch.getSelectedItem() == null)
@@ -222,6 +224,7 @@ public class MyFrame
           JOptionPane.showMessageDialog(null, "请选择批次号", "提示", 1);
           return;
         }
+       
         batchValue = MyFrame.this.batch.getSelectedItem().toString();
         if ((MyFrame.this.chkBatch.getSelectedItem() == null) || (MyFrame.this.table.getSelectedRows().length < 1))
         {
@@ -247,6 +250,12 @@ public class MyFrame
           return;
         }
         pdoVal = Double.valueOf(Double.parseDouble(MyFrame.this.pdo.getText()));
+        if ("".equals(inter.getText().trim()))
+        {
+        	JOptionPane.showMessageDialog(null, "相对湿度不可为空", "提示", 1);
+        	return;
+        }
+        interval = Double.valueOf(Double.parseDouble(inter.getText()));
         
         String schemeId = UUID.randomUUID().toString().replaceAll("-", "");
         String queryScheme = "select * from puffscheme where id||name = '" + chkValue + "'";
@@ -272,31 +281,44 @@ public class MyFrame
               }
               airflow = Double.valueOf(airflow.doubleValue() / flows.length);
             }
-           String insertScheme = "insert into qm_puffscheme(ID,NAME,CREATETIME,FINISHTIME,AIRFLOW,PUFFVOLUME,PUFFDURATION,INTERVAL,BARB,TEMP,BATCH_CODE,WGT_AVG,PDO_AVG,CHECKER,CHECK_TIME)values(?,?,to_date(?,'yyyy-mm-dd hh24:mi:ss'),to_date(?,'yyyy-mm-dd hh24:mi:ss'),?,?,?,?,?,?,?,?,?,?,sysdate)";
+            String selectScheme = "select id from qm_puffscheme where  batch_code = ?";
+            Object[] params1 = {batchMap.get(batchValue)};
+            List<Map<String, Object>> sList = db.execQuery(selectScheme, params1, db.ORACLE);
+            if (sList !=null && sList.size()>0) {
+				schemeId = sList.get(0).get("ID").toString();
+			}else {
             
-            params = new Object[] { schemeId, scheme.get("NAME"), scheme.get("CREATETIME").toString().substring(0, 19), scheme.get("FINISHTIME").toString().substring(0, 19), airflow, scheme.get("PUFFVOLUME"), 
-              scheme.get("PUFFDURATION"), scheme.get("INTERVAL"), scheme.get("ATMOSPHERICPRESSURE"), scheme.get("TEMPERATURE"), batchMap.get(batchValue), 
-              wgtVal, pdoVal, chker };
-            MyFrame.this.db.execUpdate(insertScheme, params, "oracle");
+	           String insertScheme = "insert into qm_puffscheme(ID,NAME,CREATETIME,FINISHTIME,AIRFLOW,PUFFVOLUME,PUFFDURATION,INTERVAL,BARB,TEMP,BATCH_CODE,WGT_AVG,PDO_AVG,CHECKER,CHECK_TIME)values(?,?,to_date(?,'yyyy-mm-dd hh24:mi:ss'),to_date(?,'yyyy-mm-dd hh24:mi:ss'),?,?,?,?,?,?,?,?,?,?,sysdate)";
+	            
+	            params = new Object[] { schemeId, scheme.get("NAME"), scheme.get("CREATETIME").toString().substring(0, 19), scheme.get("FINISHTIME").toString().substring(0, 19), airflow, scheme.get("PUFFVOLUME"), 
+	              scheme.get("PUFFDURATION"), interval, scheme.get("ATMOSPHERICPRESSURE"), scheme.get("TEMPERATURE"), batchMap.get(batchValue), 
+	              wgtVal, pdoVal, chker };
+	            db.execUpdate(insertScheme, params, "oracle");
+			}
           }
           int[] rows = table.getSelectedRows();
-        
           for (int i = 0; i <  rows.length; i++)
           {
-            List<?> items = db.execQuery("select * from puffschemeitem where id = " + table.getValueAt(i, 0), null, "h2");
+            List<?> items = db.execQuery("select * from puffschemeitem where id = " + table.getValueAt(rows[i], 0), null, "h2");
             if ((items != null) && (items.size() > 0))
             {
-              Object item = (Map)items.get(0);
+              Map<String, Object> item = (Map)items.get(0);
               Double puffs = Double.valueOf(0.0D);
-              String[] puffValues = ((Map)item).get("PUFFVALUES").toString().split(",");
-              String[] arrayOfString2;
-              int m = (arrayOfString2 = puffValues).length;
-              for (int k = 0; k < m; k++)
-              {
-                String string = arrayOfString2[k];
-                puffs = Double.valueOf(puffs.doubleValue() + Double.parseDouble(string));
-              }
-              Double AVGpuffs = Double.valueOf(puffs.doubleValue() / puffValues.length);
+              Double AVGpuffs = 0D;
+              String[] puffValues = new String[0];
+              if (item.get("PUFFVALUES")!=null&&!"null".equals(item.get("PUFFVALUES"))) {
+            	  puffValues = item.get("PUFFVALUES").toString().split(",");
+            	  int m = puffValues.length;
+                  for (int k = 0; k < m; k++)
+                  {
+                    String string = puffValues[k];
+                    Double dd = Double.parseDouble(string);
+                    if (dd>1) {
+                    	puffs = Double.valueOf(puffs +dd);
+					}
+                  }
+                  AVGpuffs = Double.valueOf(puffs.doubleValue() / (puffValues.length-Integer.parseInt(item.get("UNBURNEDCIGARETTECOUNT").toString())));
+			}
               String insert = "insert into qm_puffschemeitem(ID,NAME,SCHEME_ID,BANKNUM,CIG_LEN,BUTTLEN,CIG_COUNT,NOPUFF_COUNT,BF_WEIGHT,AF_WEIGHT,UNBURNED,COVALUE,PUFFVALUES,SPARED)values(sys_guid(),?,?,?,?,?,?,?,?,?,?,?,?,?)";
               
               Object[] params1 = { ((Map)item).get("NAME"), schemeId, ((Map)item).get("BANKNUM"), ((Map)item).get("CIGARETTELEN"), ((Map)item).get("BUTTLEN"), ((Map)item).get("CIGARETTECOUNT"), ((Map)item).get("NOPUFFCOUNT"), 
@@ -320,12 +342,12 @@ public class MyFrame
     panel_1.add(button);
     
     JLabel label_7 = new JLabel("平均吸阻");
-    label_7.setBounds(264, 26, 57, 15);
+    label_7.setBounds(244, 26, 57, 15);
     panel_1.add(label_7);
     
     this.pdo = new JTextField();
-    this.pdo.setBounds(330, 23, 73, 21);
-    this.pdo.addFocusListener(new FocusAdapter()
+    this.pdo.setBounds(311, 23, 73, 21);
+  /*  this.pdo.addFocusListener(new FocusAdapter()
     {
       public void focusGained(FocusEvent e)
       {
@@ -336,9 +358,9 @@ public class MyFrame
       {
         MyFrame.this.removekey(nInputPnl1);
       }
-    });
+    });*/
     this.pdo.setColumns(10);
-    this.pdo.addKeyListener(new KeyAdapter()
+   /* this.pdo.addKeyListener(new KeyAdapter()
     {
       public void keyTyped(KeyEvent e)
       {
@@ -352,19 +374,28 @@ public class MyFrame
         }
         e.consume();
       }
-    });
+    });*/
     panel_1.add(this.pdo);
     
     JLabel label_8 = new JLabel("Pa");
-    label_8.setBounds(413, 26, 24, 15);
+    label_8.setBounds(394, 26, 24, 15);
     panel_1.add(label_8);
     JLabel label_5 = new JLabel("检验员");
-    label_5.setBounds(48, 78, 44, 15);
+    label_5.setBounds(21, 64, 44, 15);
     panel_1.add(label_5);
     
     this.checker = new JComboBox();
-    checker.setBounds(101, 75, 109, 21);
+    checker.setBounds(88, 61, 109, 21);
     panel_1.add(checker);
+    
+    JLabel label_10 = new JLabel("\u76F8\u5BF9\u6E7F\u5EA6");
+    label_10.setBounds(21, 102, 54, 15);
+    panel_1.add(label_10);
+    
+    inter = new JTextField();
+    inter.setBounds(88, 99, 66, 21);
+    panel_1.add(inter);
+    inter.setColumns(10);
     
     this.table = new JTable();
     
@@ -405,7 +436,7 @@ public class MyFrame
   public void getBatch()
   {
     String selectDate = new SimpleDateFormat("yyyy-MM-dd").format(this.datePicker.getDate());
-    List<Map<String, Object>> batchList = this.db.execQuery("select b.des name,a.batch_code code from QM_BATCH a,md_mat b  where a.category = 2 and a.typ is null and a.mat_code = b.id and to_char(a.batch_date,'yyyy-mm-dd') = '" + selectDate + "'", null, "oracle");
+    List<Map<String, Object>> batchList = this.db.execQuery("select b.des name,a.batch_code code from QM_BATCH a,md_mat b  where a.category = 2 and a.typ=0 and a.mat_code = b.id and to_char(a.batch_date,'yyyy-mm-dd') = '" + selectDate + "'", null, "oracle");
     String[] batchs = new String[0];
     if (batchList != null) {
       batchs = (String[])initcombo(batchList).toArray(new String[batchList.size()]);
@@ -419,7 +450,7 @@ public class MyFrame
   public void getData()
   {
     String selectDate = new SimpleDateFormat("yyyy-MM-dd").format(this.datePicker2.getDate());
-    List<Map<String, Object>> dataList = this.db.execQuery("SELECT id,name FROM PUFFSCHEME where formatdatetime(createtime,'yyyy-MM-dd')='" + selectDate + "'", null, "h2");
+    List<Map<String, Object>> dataList = this.db.execQuery("SELECT id||name name FROM PUFFSCHEME where formatdatetime(createtime,'yyyy-MM-dd')='" + selectDate + "'", null, "h2");
     String[] datas = new String[0];
     if (dataList != null) {
       datas = (String[])initcombo(dataList).toArray(new String[dataList.size()]);
@@ -445,11 +476,18 @@ public class MyFrame
       item.setCigarettelen(map.get("CIGARETTELEN") == null ? null : map.get("CIGARETTELEN").toString());
       item.setSchemeId(map.get("PUFFSCHEMEID") == null ? null : map.get("PUFFSCHEMEID").toString());
       item.setCigarettecount(map.get("CIGARETTECOUNT") == null ? null : map.get("CIGARETTECOUNT").toString());
-      
+      item.setNopuffcount(map.get("NOPUFFCOUNT")==null?null:map.get("NOPUFFCOUNT").toString());
+      item.setBeforeweight(map.get("BEFOREWEIGHT")==null?null:map.get("BEFOREWEIGHT").toString());
+      item.setAfterweight(map.get("AFTERWEIGHT")==null?null:map.get("AFTERWEIGHT").toString());
+      item.setUnbrunedcigarettecount(map.get("UNBURNEDCIGARETTECOUNT")==null?null:map.get("UNBURNEDCIGARETTECOUNT").toString());
+      item.setCovalue(map.get("COVALUE")==null?null:map.get("COVALUE").toString());
+      item.setSumpuffcount(map.get("SUMPUFFCOUNT")==null?null:map.get("SUMPUFFCOUNT").toString());
+      item.setPuffvalues(map.get("PUFFVALUES")==null?null:map.get("PUFFVALUES").toString());
       list.add(item);
     }
     ItemTableModel model = new ItemTableModel(list);
     this.table.setModel(model);
+    table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
     for (int i = 0; i < this.table.getColumnCount(); i++) {
       this.table.getColumnModel().getColumn(i).setPreferredWidth(80);
     }

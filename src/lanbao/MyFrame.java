@@ -304,25 +304,30 @@ public class MyFrame
             {
               Map<String, Object> item = (Map)items.get(0);
               Double puffs = Double.valueOf(0.0D);
+              Double numPuffs = 0D;
               Double AVGpuffs = 0D;
+              
               String[] puffValues = new String[0];
-              if (item.get("PUFFVALUES")!=null&&!"null".equals(item.get("PUFFVALUES"))) {
+              String[] puffStatus = new String[0];
+              if (item.get("PUFFVALUES")!=null&&!"null".equals(item.get("PUFFVALUES"))&&item.get("PUFFSTATUS")!=null&&!"null".equals(item.get("PUFFSTATUS"))) {
             	  puffValues = item.get("PUFFVALUES").toString().split(",");
+            	  puffStatus = item.get("PUFFSTATUS").toString().split(",");
             	  int m = puffValues.length;
                   for (int k = 0; k < m; k++)
                   {
                     String string = puffValues[k];
                     Double dd = Double.parseDouble(string);
-                    if (dd>1) {
+                    numPuffs = numPuffs+dd;
+                    if ("1".equals(puffStatus[k])) {
                     	puffs = Double.valueOf(puffs +dd);
 					}
                   }
-                  AVGpuffs = Double.valueOf(puffs.doubleValue() / (puffValues.length-Integer.parseInt(item.get("UNBURNEDCIGARETTECOUNT").toString())));
+                  AVGpuffs = Double.valueOf(puffs.doubleValue() / (Integer.parseInt(item.get("CIGARETTECOUNT").toString())-Integer.parseInt(item.get("UNBURNEDCIGARETTECOUNT").toString())));
 			}
               String insert = "insert into qm_puffschemeitem(ID,NAME,SCHEME_ID,BANKNUM,CIG_LEN,BUTTLEN,CIG_COUNT,NOPUFF_COUNT,BF_WEIGHT,AF_WEIGHT,UNBURNED,COVALUE,PUFFVALUES,SPARED)values(sys_guid(),?,?,?,?,?,?,?,?,?,?,?,?,?)";
               
               Object[] params1 = { ((Map)item).get("NAME"), schemeId, ((Map)item).get("BANKNUM"), ((Map)item).get("CIGARETTELEN"), ((Map)item).get("BUTTLEN"), ((Map)item).get("CIGARETTECOUNT"), ((Map)item).get("NOPUFFCOUNT"), 
-                ((Map)item).get("BEFOREWEIGHT"), ((Map)item).get("AFTERWEIGHT"), ((Map)item).get("UNBURNEDCIGARETTECOUNT"), ((Map)item).get("COVALUE"), AVGpuffs, puffs };
+                ((Map)item).get("BEFOREWEIGHT"), ((Map)item).get("AFTERWEIGHT"), ((Map)item).get("UNBURNEDCIGARETTECOUNT"), ((Map)item).get("COVALUE"), AVGpuffs, numPuffs };
               MyFrame.this.db.execUpdate(insert, params1, "oracle");
             }
           }

@@ -290,7 +290,7 @@ public class MyFrame
             
 	           String insertScheme = "insert into qm_puffscheme(ID,NAME,CREATETIME,FINISHTIME,AIRFLOW,PUFFVOLUME,PUFFDURATION,INTERVAL,BARB,TEMP,BATCH_CODE,WGT_AVG,PDO_AVG,CHECKER,CHECK_TIME)values(?,?,to_date(?,'yyyy-mm-dd hh24:mi:ss'),to_date(?,'yyyy-mm-dd hh24:mi:ss'),?,?,?,?,?,?,?,?,?,?,sysdate)";
 	            
-	            params = new Object[] { schemeId, scheme.get("NAME"), scheme.get("CREATETIME").toString().substring(0, 19), scheme.get("FINISHTIME").toString().substring(0, 19), airflow, scheme.get("PUFFVOLUME"), 
+	            params = new Object[] { schemeId, scheme.get("NAME"), scheme.get("CREATETIME").toString().substring(0, 19), scheme.get("FINISHTIME")==null?new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()):scheme.get("FINISHTIME").toString().substring(0, 19), airflow, scheme.get("PUFFVOLUME"), 
 	              scheme.get("PUFFDURATION"), interval, scheme.get("ATMOSPHERICPRESSURE"), scheme.get("TEMPERATURE"), batchMap.get(batchValue), 
 	              wgtVal, pdoVal, chker };
 	            db.execUpdate(insertScheme, params, "oracle");
@@ -304,6 +304,7 @@ public class MyFrame
             {
               Map<String, Object> item = (Map)items.get(0);
               Double puffs = Double.valueOf(0.0D);
+              Double allPuffs = 0.0D;
               Double AVGpuffs = 0D;
               String[] puffValues = new String[0];
               if (item.get("PUFFVALUES")!=null&&!"null".equals(item.get("PUFFVALUES"))) {
@@ -316,13 +317,14 @@ public class MyFrame
                     if (dd>1) {
                     	puffs = Double.valueOf(puffs +dd);
 					}
+                    allPuffs += dd;
                   }
                   AVGpuffs = Double.valueOf(puffs.doubleValue() / (puffValues.length-Integer.parseInt(item.get("UNBURNEDCIGARETTECOUNT").toString())));
 			}
               String insert = "insert into qm_puffschemeitem(ID,NAME,SCHEME_ID,BANKNUM,CIG_LEN,BUTTLEN,CIG_COUNT,NOPUFF_COUNT,BF_WEIGHT,AF_WEIGHT,UNBURNED,COVALUE,PUFFVALUES,SPARED)values(sys_guid(),?,?,?,?,?,?,?,?,?,?,?,?,?)";
               
               Object[] params1 = { ((Map)item).get("NAME"), schemeId, ((Map)item).get("BANKNUM"), ((Map)item).get("CIGARETTELEN"), ((Map)item).get("BUTTLEN"), ((Map)item).get("CIGARETTECOUNT"), ((Map)item).get("NOPUFFCOUNT"), 
-                ((Map)item).get("BEFOREWEIGHT"), ((Map)item).get("AFTERWEIGHT"), ((Map)item).get("UNBURNEDCIGARETTECOUNT"), ((Map)item).get("COVALUE"), AVGpuffs, puffs };
+                ((Map)item).get("BEFOREWEIGHT"), ((Map)item).get("AFTERWEIGHT"), ((Map)item).get("UNBURNEDCIGARETTECOUNT"), ((Map)item).get("COVALUE"), AVGpuffs, allPuffs  };
               MyFrame.this.db.execUpdate(insert, params1, "oracle");
             }
           }

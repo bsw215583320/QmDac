@@ -30,15 +30,17 @@ public class JdbcUtil
   private Connection connection;
   private PreparedStatement pstmt;
   private ResultSet resultSet;
-  
+
   static {
     try
     {
       Properties prop = new Properties();
-      
+
         String dir = System.getProperty("user.dir");
-        InputStream inStream = new FileInputStream(new File(dir+"/jdbc.properties"));
-     // InputStream inStream = JdbcUtil.class.getResourceAsStream("/jdbc.properties");
+        //获取项目所在目录下的配置文件 ，打包时用，可将配置文件放在jar包外，便于配置。
+      InputStream inStream = new FileInputStream(new File(dir+"/jdbc.properties"));
+      // 获取项目中的配置文件
+      //InputStream inStream = JdbcUtil.class.getResourceAsStream("/jdbc.properties");
       prop.load(inStream);
       USERNAME = prop.getProperty("jdbc.username");
       PASSWORD = prop.getProperty("jdbc.password");
@@ -54,7 +56,7 @@ public class JdbcUtil
       throw new RuntimeException("读取数据库配置文件异常！", e);
     }
   }
-  
+
   public Connection getConnection(String type)
   {
     try
@@ -76,7 +78,7 @@ public class JdbcUtil
     }
     return this.connection;
   }
-  
+
   public void close(ResultSet rs, PreparedStatement pstmt, Connection con)
   {
     try
@@ -96,7 +98,7 @@ public class JdbcUtil
       e.printStackTrace();
     }
   }
-  
+
   public int execUpdate(String sql, Object[] params, String type)
   {
     try
@@ -120,7 +122,7 @@ public class JdbcUtil
       close(this.resultSet, this.pstmt, this.connection);
     }
   }
-  
+
   public List<Map<String, Object>> execQuery(String sql, Object[] params, String type)
   {
     try
@@ -133,11 +135,11 @@ public class JdbcUtil
         }
       }
       ResultSet rs = this.pstmt.executeQuery();
-      
+
       List<Map<String, Object>> al = new ArrayList();
-      
+
       ResultSetMetaData rsmd = rs.getMetaData();
-      
+
       int columnCount = rsmd.getColumnCount();
       while (rs.next())
       {
@@ -145,9 +147,9 @@ public class JdbcUtil
         for (int i = 0; i < columnCount; i++)
         {
           String columnName = rsmd.getColumnName(i + 1);
-          
+
           Object columnValue = rs.getObject(columnName);
-          
+
           hm.put(columnName, columnValue);
         }
         al.add(hm);
